@@ -1,0 +1,112 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package firma;
+
+import CryptoServerAPI.CryptoServerException;
+import CryptoServerCXI.CryptoServerCXI;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.jws.WebMethod;
+import javax.jws.WebParam;
+import javax.jws.WebService;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
+
+/**
+ *
+ * @author Admin
+ */
+@WebService(serviceName = "Firmador")
+public class Firmador {
+private String ip;
+private String usuario;
+private String password;
+private String grupo;
+
+    /**
+     * This is a sample web service operation
+     */
+    @WebMethod(operationName = "Firmar")
+    public Booleano Firmar(@WebParam(name = "data") String data,String nombreLlave) {
+        Booleano respuesta = new Booleano();
+        
+        try {
+            CXI cxi = new CXI();
+            
+            String mensaje="";
+            
+            int timeout;
+            
+            ObtenerDatosDeConfguracion();
+            mensaje =cxi.Conectar(usuario,password, ip);
+            if(!mensaje.equals(""))
+            {
+                respuesta = new Booleano(mensaje);
+                return respuesta;
+            }
+            
+            CryptoServerCXI.Key llave = cxi.ObtenerLlave(nombreLlave, grupo);
+            if(llave == null)
+            {
+                respuesta = new Booleano("No se pudo encontrar la llave para realizar el firmado,"
+                        + " Por favor, verifique que existe y que se encuentra dentro del grupo del usuario"
+                        + " que se encuentra logueado");
+                return respuesta;
+            }
+            
+            byte[] firma = cxi.FirmarCadena(llave, data.getBytes(Charset.forName("UTF-8")));
+            sun.misc.BASE64Encoder encoder = new sun.misc.BASE64Encoder();
+            String str =encoder.encode(firma);
+             
+            
+            respuesta = new Booleano();
+            respuesta.setPeticionCorrecta(true); 
+            respuesta.setFirma(str);
+            
+            
+        } 
+        catch(Exception ee)
+        {
+             respuesta = new Booleano("Error durante el proceso: " + ee.getMessage());
+             return respuesta;
+        }
+        return respuesta;
+    }
+    
+    private void ObtenerDatosDeConfguracion()
+    {
+        try {
+            DocumentBuilderFactory dbFactory ;
+            DocumentBuilder dBuilder ;
+            Document doc ;
+            String ruta2="";
+           
+            ruta2= System.getProperty("user.dir") +"/config.xml";
+            
+            dbFactory = DocumentBuilderFactory.newInstance();
+            dBuilder = dbFactory.newDocumentBuilder();
+            doc = dBuilder.parse(ruta2);
+            
+           ip= doc.getElementsByTagName("Configuracion").item(0).getAttributes().getNamedItem("ip").getNodeValue();
+           usuario= doc.getElementsByTagName("Configuracion").item(0).getAttributes().getNamedItem("usuario").getNodeValue();
+           password= doc.getElementsByTagName("Configuracion").item(0).getAttributes().getNamedItem("password").getNodeValue();
+           grupo= doc.getElementsByTagName("Configuracion").item(0).getAttributes().getNamedItem("grupo").getNodeValue();
+           
+        } catch (ParserConfigurationException ex) {
+            Logger.getLogger(Firmador.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SAXException ex) {
+            Logger.getLogger(Firmador.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Firmador.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+}
