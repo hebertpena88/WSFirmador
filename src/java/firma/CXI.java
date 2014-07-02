@@ -63,9 +63,10 @@ public byte[] FirmarCadena(CryptoServerCXI.Key key,byte[] data)
 {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA1");
-            md.update(data);
+             md.update(data, 0, data.length);
             byte [] hash = md.digest();
-            return cxi.sign(key, 0, hash);
+            int mech = CryptoServerCXI.MECH_HASH_ALGO_SHA1 |CryptoServerCXI.MECH_PAD_PKCS1 ;
+            return cxi.sign(key, mech, hash);
             
         } catch (NoSuchAlgorithmException ex) {
             Logger.getLogger(CXI.class.getName()).log(Level.SEVERE, null, ex);

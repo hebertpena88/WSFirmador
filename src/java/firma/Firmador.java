@@ -38,9 +38,9 @@ private String grupo;
     @WebMethod(operationName = "Firmar")
     public Booleano Firmar(@WebParam(name = "data") String data,String nombreLlave) {
         Booleano respuesta = new Booleano();
-        
+        CXI cxi = new CXI();
         try {
-            CXI cxi = new CXI();
+            
             
             String mensaje="";
             
@@ -62,9 +62,10 @@ private String grupo;
                         + " que se encuentra logueado");
                 return respuesta;
             }
-            
-            byte[] firma = cxi.FirmarCadena(llave, data.getBytes(Charset.forName("UTF-8")));
             sun.misc.BASE64Encoder encoder = new sun.misc.BASE64Encoder();
+            String base64 = encoder.encode(data.getBytes());
+            byte[] firma = cxi.FirmarCadena(llave, data.getBytes());
+            
             String str =encoder.encode(firma);
              
             
@@ -79,6 +80,7 @@ private String grupo;
              respuesta = new Booleano("Error durante el proceso: " + ee.getMessage());
              return respuesta;
         }
+        finally{cxi.CerrarSesion();}
         return respuesta;
     }
     
