@@ -80,7 +80,10 @@ private String grupo;
              respuesta = new Booleano("Error durante el proceso: " + ee.getMessage());
              return respuesta;
         }
-        finally{cxi.CerrarSesion();}
+        finally
+        {
+            cxi.CerrarSesion();
+        }
         return respuesta;
     }
     
