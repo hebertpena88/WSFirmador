@@ -20,6 +20,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
@@ -73,6 +74,40 @@ public byte[] FirmarCadena(CryptoServerCXI.Key key,byte[] data)
         } catch (IOException ex) {
             Logger.getLogger(CXI.class.getName()).log(Level.SEVERE, null, ex);
         } catch (CryptoServerException ex) {
+            Logger.getLogger(CXI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+}
+
+public byte[][] FirmarCadenaBulk(CryptoServerCXI.Key key,List<byte[]> data)
+{
+        try {
+            List<byte[]> hashes = new ArrayList<>();
+            MessageDigest md = MessageDigest.getInstance("SHA1");
+            int mech = CryptoServerCXI.MECH_HASH_ALGO_SHA1 |CryptoServerCXI.MECH_PAD_PKCS1 ;
+            byte[][] b=new byte[data.size()][];
+            for(int i=0; i< data.size();i++)
+            {
+                    md.update(data.get(i), 0, data.get(i).length);
+                    byte[] hash = md.digest();
+                    b[i]= hash;
+                try {
+                    byte[][] res =cxi.bulkSign(key, mech, b);
+                    return res;
+                } catch (IOException ex) {
+                    Logger.getLogger(CXI.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (CryptoServerException ex) {
+                    Logger.getLogger(CXI.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                    
+            
+            }
+           
+            
+            
+            return null;
+            
+        } catch (NoSuchAlgorithmException ex) {
             Logger.getLogger(CXI.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
